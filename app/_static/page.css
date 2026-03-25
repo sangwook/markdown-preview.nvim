@@ -126,3 +126,24 @@ main {
 .mermaid-tb-btn:hover {
   background: var(--border-color);
 }
+
+.mermaid-expanded {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 999;
+  margin: 0;
+  border: none;
+  border-radius: 0;
+  background: var(--secondary-background-color);
+}
+
+.mermaid-expanded .mermaid {
+  min-height: 100vh;
+}
+
+.mermaid-expanded .mermaid-toolbar {
+  opacity: 1;
+}

@@ -1,9 +1,17 @@
 (function () {
+  // SVG icons
+  var ICON_ZOOMIN = '<svg viewBox="0 0 16 16" width="16" height="16"><path fill="currentColor" d="M6.5 12a5.5 5.5 0 1 0 0-11 5.5 5.5 0 0 0 0 11zM13 6.5a6.5 6.5 0 1 1-13 0 6.5 6.5 0 0 1 13 0z"/><path fill="currentColor" d="M10.344 11.742a.5.5 0 0 1 .707 0l4.136 4.136a.5.5 0 0 1-.707.707l-4.136-4.136a.5.5 0 0 1 0-.707z"/><path fill="currentColor" d="M6.5 3a.5.5 0 0 1 .5.5V6h2.5a.5.5 0 0 1 0 1H7v2.5a.5.5 0 0 1-1 0V7H3.5a.5.5 0 0 1 0-1H6V3.5a.5.5 0 0 1 .5-.5z"/></svg>';
+  var ICON_ZOOMOUT = '<svg viewBox="0 0 16 16" width="16" height="16"><path fill="currentColor" d="M6.5 12a5.5 5.5 0 1 0 0-11 5.5 5.5 0 0 0 0 11zM13 6.5a6.5 6.5 0 1 1-13 0 6.5 6.5 0 0 1 13 0z"/><path fill="currentColor" d="M10.344 11.742a.5.5 0 0 1 .707 0l4.136 4.136a.5.5 0 0 1-.707.707l-4.136-4.136a.5.5 0 0 1 0-.707z"/><path fill="currentColor" d="M3.5 6a.5.5 0 0 0 0 1h6a.5.5 0 0 0 0-1h-6z"/></svg>';
+  var ICON_RESET = '<svg viewBox="0 0 16 16" width="16" height="16"><path fill="currentColor" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 1 1 .908-.418A6 6 0 1 1 8 2v1z"/><path fill="currentColor" d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z"/></svg>';
+  var ICON_EXPAND = '<svg viewBox="0 0 16 16" width="16" height="16"><path fill="currentColor" d="M5.828 10.172a.5.5 0 0 0-.707 0l-4.096 4.096V11.5a.5.5 0 0 0-1 0v3.975a.5.5 0 0 0 .5.5H4.5a.5.5 0 0 0 0-1H1.732l4.096-4.096a.5.5 0 0 0 0-.707zm4.344-4.344a.5.5 0 0 0 .707 0l4.096-4.096V4.5a.5.5 0 1 0 1 0V.525a.5.5 0 0 0-.5-.5H11.5a.5.5 0 0 0 0 1h2.768l-4.096 4.096a.5.5 0 0 0 0 .707z"/></svg>';
+  var ICON_SHRINK = '<svg viewBox="0 0 16 16" width="16" height="16"><path fill="currentColor" d="M.172 15.828a.5.5 0 0 0 .707 0l4.096-4.096V14.5a.5.5 0 1 0 1 0v-3.975a.5.5 0 0 0-.5-.5H1.5a.5.5 0 0 0 0 1h2.768L.172 15.12a.5.5 0 0 0 0 .707zM15.828.172a.5.5 0 0 0-.707 0l-4.096 4.096V1.5a.5.5 0 1 0-1 0v3.975a.5.5 0 0 0 .5.5H14.5a.5.5 0 0 0 0-1h-2.768L15.828.878a.5.5 0 0 0 0-.707z"/></svg>';
+
   var TOOLBAR_HTML =
     '<div class="mermaid-toolbar">' +
-      '<button class="mermaid-tb-btn" data-action="zoomin" title="Zoom in">+</button>' +
-      '<button class="mermaid-tb-btn" data-action="zoomout" title="Zoom out">&minus;</button>' +
-      '<button class="mermaid-tb-btn" data-action="reset" title="Reset">&#8634;</button>' +
+      '<button class="mermaid-tb-btn" data-action="zoomin" title="Zoom in">' + ICON_ZOOMIN + '</button>' +
+      '<button class="mermaid-tb-btn" data-action="zoomout" title="Zoom out">' + ICON_ZOOMOUT + '</button>' +
+      '<button class="mermaid-tb-btn" data-action="reset" title="Reset">' + ICON_RESET + '</button>' +
+      '<button class="mermaid-tb-btn" data-action="expand" title="Expand">' + ICON_EXPAND + '</button>' +
     '</div>';
 
   function initPanZoom(mermaidDiv) {
@@ -45,6 +53,13 @@
       if (action === 'zoomin') pz.zoomIn();
       else if (action === 'zoomout') pz.zoomOut();
       else if (action === 'reset') { pz.resetZoom(); pz.resetPan(); }
+      else if (action === 'expand') {
+        var isExpanded = wrapper.classList.toggle('mermaid-expanded');
+        btn.innerHTML = isExpanded ? ICON_SHRINK : ICON_EXPAND;
+        btn.title = isExpanded ? 'Shrink' : 'Expand';
+        // resize after transition
+        setTimeout(function () { pz.resize(); pz.fit(); pz.center(); }, 300);
+      }
     });
   }
 
