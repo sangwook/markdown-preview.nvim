@@ -342,6 +342,8 @@ export default class PreviewPage extends React.Component {
           <script type="text/javascript" src="/_static/snap.svg.min.js"></script>
           <script type="text/javascript" src="/_static/tweenlite.min.js"></script>
           <script type="text/javascript" src="/_static/mermaid.min.js"></script>
+          <script type="text/javascript" src="/_static/svg-pan-zoom.min.js"></script>
+          <script type="text/javascript" src="/_static/mermaid-panzoom.js" defer></script>
           <script type="text/javascript" src="/_static/sequence-diagram-min.js"></script>
           <script type="text/javascript" src="/_static/katex@0.15.3.js"></script>
           <script type="text/javascript" src="/_static/mhchem.min.js"></script>
