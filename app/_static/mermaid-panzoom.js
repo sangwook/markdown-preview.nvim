@@ -30,51 +30,84 @@
     wrapper.appendChild(mermaidDiv);
     wrapper.insertAdjacentHTML('beforeend', TOOLBAR_HTML);
 
-    // preserve original SVG dimensions before svg-pan-zoom takes over
-    var origWidth = svg.getAttribute('width');
-    var origHeight = svg.getAttribute('height');
-    var box = svg.getBoundingClientRect();
-    var naturalHeight = box.height || parseFloat(origHeight) || 400;
-    var naturalWidth = box.width || parseFloat(origWidth) || 800;
+    // state - CSS transform based, no SVG manipulation
+    var state = { zoom: 1, panX: 0, panY: 0, dragging: false, startX: 0, startY: 0 };
 
-    // svg-pan-zoom requires width/height attributes
-    if (!origWidth) svg.setAttribute('width', naturalWidth);
-    if (!origHeight) svg.setAttribute('height', naturalHeight);
-
-    var pz = svgPanZoom(svg, {
-      zoomEnabled: true,
-      controlIconsEnabled: false,
-      fit: true,
-      center: true,
-      minZoom: 0.3,
-      maxZoom: 10,
-      zoomScaleSensitivity: 0.3
-    });
-
-    // prevent over-zoom: if fit caused zoom > 1, cap it at original scale
-    if (pz.getZoom() > 1) {
-      pz.zoom(1);
-      pz.center();
+    function applyTransform() {
+      svg.style.transform = 'translate(' + state.panX + 'px,' + state.panY + 'px) scale(' + state.zoom + ')';
+      svg.style.transformOrigin = '0 0';
     }
+
+    // scroll to zoom
+    mermaidDiv.addEventListener('wheel', function (e) {
+      e.preventDefault();
+      var rect = mermaidDiv.getBoundingClientRect();
+      var mouseX = e.clientX - rect.left;
+      var mouseY = e.clientY - rect.top;
+
+      var oldZoom = state.zoom;
+      var factor = e.deltaY < 0 ? 1.15 : 1 / 1.15;
+      state.zoom = Math.min(10, Math.max(0.3, state.zoom * factor));
+
+      // zoom toward cursor position
+      var ratio = state.zoom / oldZoom;
+      state.panX = mouseX - ratio * (mouseX - state.panX);
+      state.panY = mouseY - ratio * (mouseY - state.panY);
+      applyTransform();
+    }, { passive: false });
+
+    // drag to pan
+    mermaidDiv.addEventListener('mousedown', function (e) {
+      if (e.button !== 0) return;
+      state.dragging = true;
+      state.startX = e.clientX - state.panX;
+      state.startY = e.clientY - state.panY;
+      mermaidDiv.style.cursor = 'grabbing';
+      e.preventDefault();
+    });
+    document.addEventListener('mousemove', function (e) {
+      if (!state.dragging) return;
+      state.panX = e.clientX - state.startX;
+      state.panY = e.clientY - state.startY;
+      applyTransform();
+    });
+    document.addEventListener('mouseup', function () {
+      if (!state.dragging) return;
+      state.dragging = false;
+      mermaidDiv.style.cursor = '';
+    });
 
     // toolbar events
     wrapper.querySelector('.mermaid-toolbar').addEventListener('click', function (e) {
       var btn = e.target.closest('[data-action]');
       if (!btn) return;
       var action = btn.dataset.action;
-      if (action === 'zoomin') pz.zoomIn();
-      else if (action === 'zoomout') pz.zoomOut();
-      else if (action === 'reset') { pz.resetZoom(); pz.resetPan(); }
+      if (action === 'zoomin') {
+        state.zoom = Math.min(10, state.zoom * 1.3);
+        applyTransform();
+      }
+      else if (action === 'zoomout') {
+        state.zoom = Math.max(0.3, state.zoom / 1.3);
+        applyTransform();
+      }
+      else if (action === 'reset') {
+        state.zoom = 1; state.panX = 0; state.panY = 0;
+        applyTransform();
+      }
       else if (action === 'expand') {
         var isExpanded = wrapper.classList.toggle('mermaid-expanded');
         btn.innerHTML = isExpanded ? ICON_SHRINK : ICON_EXPAND;
         btn.title = isExpanded ? 'Shrink' : 'Expand';
-        setTimeout(function () { pz.resize(); pz.fit(); pz.center(); }, 300);
+        state.zoom = 1; state.panX = 0; state.panY = 0;
+        applyTransform();
       }
       else if (action === 'popup') {
         var svgEl = wrapper.querySelector('.mermaid svg');
         if (!svgEl) return;
-        var svgData = new XMLSerializer().serializeToString(svgEl);
+        var clone = svgEl.cloneNode(true);
+        clone.style.transform = '';
+        clone.style.transformOrigin = '';
+        var svgData = new XMLSerializer().serializeToString(clone);
         var isDark = document.querySelector('main').getAttribute('data-theme') === 'dark';
         var bg = isDark ? '#0d1117' : '#ffffff';
         var fg = isDark ? '#c9d1d9' : '#24292e';
