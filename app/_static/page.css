@@ -89,7 +89,6 @@ main {
 
 .mermaid-panzoom-wrap .mermaid svg {
   display: block;
-  max-width: none !important;
 }
 
 .mermaid-toolbar {
