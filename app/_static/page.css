@@ -85,7 +85,6 @@ main {
 }
 
 .mermaid-panzoom-wrap .mermaid {
-  min-height: 200px;
 }
 
 .mermaid-panzoom-wrap .mermaid svg {
@@ -141,7 +140,7 @@ main {
 }
 
 .mermaid-expanded .mermaid {
-  min-height: 100vh;
+  height: 100vh;
 }
 
 .mermaid-expanded .mermaid-toolbar {

@@ -30,22 +30,32 @@
     wrapper.appendChild(mermaidDiv);
     wrapper.insertAdjacentHTML('beforeend', TOOLBAR_HTML);
 
-    // svg must have width/height attributes for svg-pan-zoom
-    if (!svg.getAttribute('width')) svg.setAttribute('width', '100%');
-    if (!svg.getAttribute('height')) {
-      var box = svg.getBoundingClientRect();
-      svg.setAttribute('height', box.height || 400);
-    }
+    // preserve original SVG dimensions before svg-pan-zoom takes over
+    var origWidth = svg.getAttribute('width');
+    var origHeight = svg.getAttribute('height');
+    var box = svg.getBoundingClientRect();
+    var naturalHeight = box.height || parseFloat(origHeight) || 400;
+    var naturalWidth = box.width || parseFloat(origWidth) || 800;
+
+    // svg-pan-zoom requires width/height attributes
+    if (!origWidth) svg.setAttribute('width', naturalWidth);
+    if (!origHeight) svg.setAttribute('height', naturalHeight);
 
     var pz = svgPanZoom(svg, {
       zoomEnabled: true,
       controlIconsEnabled: false,
       fit: true,
       center: true,
-      minZoom: 0.5,
+      minZoom: 0.3,
       maxZoom: 10,
       zoomScaleSensitivity: 0.3
     });
+
+    // prevent over-zoom: if fit caused zoom > 1, cap it at original scale
+    if (pz.getZoom() > 1) {
+      pz.zoom(1);
+      pz.center();
+    }
 
     // toolbar events
     wrapper.querySelector('.mermaid-toolbar').addEventListener('click', function (e) {
