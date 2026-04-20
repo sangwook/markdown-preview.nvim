@@ -6,6 +6,7 @@
   var ICON_EXPAND = '<svg viewBox="0 0 16 16" width="16" height="16"><path fill="currentColor" d="M5.828 10.172a.5.5 0 0 0-.707 0l-4.096 4.096V11.5a.5.5 0 0 0-1 0v3.975a.5.5 0 0 0 .5.5H4.5a.5.5 0 0 0 0-1H1.732l4.096-4.096a.5.5 0 0 0 0-.707zm4.344-4.344a.5.5 0 0 0 .707 0l4.096-4.096V4.5a.5.5 0 1 0 1 0V.525a.5.5 0 0 0-.5-.5H11.5a.5.5 0 0 0 0 1h2.768l-4.096 4.096a.5.5 0 0 0 0 .707z"/></svg>';
   var ICON_SHRINK = '<svg viewBox="0 0 16 16" width="16" height="16"><path fill="currentColor" d="M.172 15.828a.5.5 0 0 0 .707 0l4.096-4.096V14.5a.5.5 0 1 0 1 0v-3.975a.5.5 0 0 0-.5-.5H1.5a.5.5 0 0 0 0 1h2.768L.172 15.12a.5.5 0 0 0 0 .707zM15.828.172a.5.5 0 0 0-.707 0l-4.096 4.096V1.5a.5.5 0 1 0-1 0v3.975a.5.5 0 0 0 .5.5H14.5a.5.5 0 0 0 0-1h-2.768L15.828.878a.5.5 0 0 0 0-.707z"/></svg>';
   var ICON_POPUP = '<svg viewBox="0 0 16 16" width="16" height="16"><path fill="currentColor" d="M8.636 3.5a.5.5 0 0 0-.5-.5H1.5A1.5 1.5 0 0 0 0 4.5v10A1.5 1.5 0 0 0 1.5 16h10a1.5 1.5 0 0 0 1.5-1.5V7.864a.5.5 0 0 0-1 0V14.5a.5.5 0 0 1-.5.5h-10a.5.5 0 0 1-.5-.5v-10a.5.5 0 0 1 .5-.5h6.636a.5.5 0 0 0 .5-.5z"/><path fill="currentColor" d="M16 .5a.5.5 0 0 0-.5-.5h-5a.5.5 0 0 0 0 1h3.793L6.146 9.146a.5.5 0 1 0 .708.708L15 1.707V5.5a.5.5 0 0 0 1 0v-5z"/></svg>';
+  var ICON_DOWNLOAD = '<svg viewBox="0 0 16 16" width="16" height="16"><path fill="currentColor" d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/><path fill="currentColor" d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/></svg>';
 
   var TOOLBAR_HTML =
     '<div class="mermaid-toolbar">' +
@@ -14,6 +15,7 @@
       '<button class="mermaid-tb-btn" data-action="reset" title="Reset">' + ICON_RESET + '</button>' +
       '<button class="mermaid-tb-btn" data-action="expand" title="Expand">' + ICON_EXPAND + '</button>' +
       '<button class="mermaid-tb-btn" data-action="popup" title="Open in new window">' + ICON_POPUP + '</button>' +
+      '<button class="mermaid-tb-btn" data-action="save" title="Save as PNG">' + ICON_DOWNLOAD + '</button>' +
     '</div>';
 
   function initPanZoom(mermaidDiv) {
@@ -127,6 +129,44 @@
           '<\/script></body></html>';
         var popup = window.open('', '_blank', 'width=1200,height=800');
         if (popup) { popup.document.write(html); popup.document.close(); }
+      }
+      else if (action === 'save') {
+        var svgEl = wrapper.querySelector('.mermaid svg');
+        if (!svgEl) return;
+        var clone = svgEl.cloneNode(true);
+        clone.style.transform = '';
+        clone.style.transformOrigin = '';
+        // ensure background for PNG
+        var isDark = document.querySelector('main').getAttribute('data-theme') === 'dark';
+        var bgColor = isDark ? '#0d1117' : '#ffffff';
+        var rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        rect.setAttribute('width', '100%');
+        rect.setAttribute('height', '100%');
+        rect.setAttribute('fill', bgColor);
+        clone.insertBefore(rect, clone.firstChild);
+        // get dimensions from viewBox
+        var vb = clone.getAttribute('viewBox');
+        var parts = vb ? vb.split(/[\s,]+/) : null;
+        var w = parts ? parseFloat(parts[2]) : svgEl.getBoundingClientRect().width;
+        var h = parts ? parseFloat(parts[3]) : svgEl.getBoundingClientRect().height;
+        var scale = 2; // 2x for retina
+        clone.setAttribute('width', w);
+        clone.setAttribute('height', h);
+        var svgData = new XMLSerializer().serializeToString(clone);
+        var img = new Image();
+        img.onload = function () {
+          var canvas = document.createElement('canvas');
+          canvas.width = w * scale;
+          canvas.height = h * scale;
+          var ctx = canvas.getContext('2d');
+          ctx.scale(scale, scale);
+          ctx.drawImage(img, 0, 0);
+          var a = document.createElement('a');
+          a.download = 'mermaid-diagram.png';
+          a.href = canvas.toDataURL('image/png');
+          a.click();
+        };
+        img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgData);
       }
     });
   }
